@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"fyne.io/fyne/v2"
@@ -12,6 +13,8 @@ import (
 func main() {
     myApp := app.New()
     myWindow := myApp.NewWindow("File Manager")
+
+	currentDir := "."
 
     // list files and directory
     fileList := widget.NewList(
@@ -27,7 +30,9 @@ func main() {
             o.(*widget.Label).SetText(files[i].Name())
         })
 
-    // push buttom
+	dirLabel := widget.NewLabel(fmt.Sprintf("Directory: %s", currentDir))
+
+	// push buttom
     fileList.OnSelected = func(id int) {
         files, _ := ioutil.ReadDir(".")
         selectedFile := files[id]
@@ -44,7 +49,13 @@ func main() {
     })
 
     // container
-    content := container.NewVBox(backButton, fileList)
+    content := container.NewBorder(
+		container.NewVBox(fileList, backButton), 
+		dirLabel,
+		nil,
+		nil,
+		fileList,
+	)
 	fileList.Resize(fyne.NewSize(400, 300))
     myWindow.SetContent(content)
 
