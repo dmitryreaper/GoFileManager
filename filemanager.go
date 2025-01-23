@@ -5,10 +5,11 @@ import (
 	"io/ioutil"
 	"os"
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 )
 
-func createFileList(currentDir string, dirLabel *widget.Label) (*widget.List, *widget.Button) {
+func createFileList(currentDir string, dirLabel *widget.Label, mainWindow fyne.Window) (*widget.List, *widget.Button) {
 	fileList := widget.NewList(
 		func() int {
 			files, _ := ioutil.ReadDir(currentDir)
@@ -18,6 +19,7 @@ func createFileList(currentDir string, dirLabel *widget.Label) (*widget.List, *w
 			return widget.NewLabel("")
 		},
 		func(i int, o fyne.CanvasObject) {
+			
 			files, _ := ioutil.ReadDir(currentDir)
 			o.(*widget.Label).SetText(files[i].Name())
 		},
@@ -35,6 +37,8 @@ func createFileList(currentDir string, dirLabel *widget.Label) (*widget.List, *w
 		selectedFile := files[id]
 		if selectedFile.IsDir() {
 			updateDir(selectedFile.Name())
+		} else {
+			OpenTextEditor(selectedFile.Name(), currentDir, mainWindow)
 		}
 	}
 
@@ -43,4 +47,15 @@ func createFileList(currentDir string, dirLabel *widget.Label) (*widget.List, *w
 	})
 
 	return fileList, backButton
+}
+
+func createMainContent(currentDir string, mainWindow fyne.Window) fyne.CanvasObject {
+	dirLabel := widget.NewLabel(fmt.Sprintf("Directory: %s", currentDir))
+	fileList, backButton := createFileList(currentDir, dirLabel, mainWindow)
+
+	return container.NewVBox(
+		dirLabel,
+		container.NewHBox(backButton),
+		fileList,
+	)
 }
