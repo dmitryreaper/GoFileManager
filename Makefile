@@ -1,6 +1,6 @@
 BINARY_NAME = filemanager
 
-SRC_FILES = main.go ui.go filemanager.go
+SRC_FILES = main.go ui.go filemanager.go editor.go
 
 .PHONY: all build run clean
 

@@ -13,7 +13,7 @@ func createMainWindow(myApp fyne.App) fyne.Window {
 
 	currentDir, _ := os.Getwd()
 	dirLabel := widget.NewLabel(fmt.Sprintf("Directory: %s", currentDir))
-	fileList, backButton := createFileList(currentDir, dirLabel)
+	fileList, backButton := createFileList(currentDir, dirLabel, myWindow)
 
 	content := container.NewBorder(
 		container.NewVBox(fileList, backButton),
