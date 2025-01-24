@@ -8,6 +8,8 @@ import (
 	"os"
 )
 
+var Content fyne.CanvasObject
+
 func createMainWindow(myApp fyne.App) fyne.Window {
 	myWindow := myApp.NewWindow("File Manager")
 
@@ -15,7 +17,7 @@ func createMainWindow(myApp fyne.App) fyne.Window {
 	dirLabel := widget.NewLabel(fmt.Sprintf("Directory: %s", currentDir))
 	fileList, backButton := createFileList(currentDir, dirLabel, myWindow)
 
-	content := container.NewBorder(
+	Content = container.NewBorder(
 		container.NewVBox(fileList, backButton),
 		dirLabel,
 		nil,
@@ -23,7 +25,9 @@ func createMainWindow(myApp fyne.App) fyne.Window {
 		fileList,
 	)
 
-	myWindow.SetContent(content)
+	myWindow.SetContent(Content)
 	myWindow.Resize(fyne.NewSize(800, 600))
+	myWindow.SetFixedSize(true)
+	myWindow.CenterOnScreen()
 	return myWindow
 }

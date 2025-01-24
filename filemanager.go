@@ -2,14 +2,16 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
+	"io/ioutil"
+	"os"
 )
 
-func createFileList(currentDir string, dirLabel *widget.Label, mainWindow fyne.Window) (*widget.List, *widget.Button) {
+func createFileList(currentDir string, dirLabel *widget.Label,
+	mainWindow fyne.Window) (*widget.List, *widget.Button) {
 	fileList := widget.NewList(
 		func() int {
 			files, _ := ioutil.ReadDir(currentDir)
@@ -19,14 +21,16 @@ func createFileList(currentDir string, dirLabel *widget.Label, mainWindow fyne.W
 			return widget.NewLabel("")
 		},
 		func(i int, o fyne.CanvasObject) {
-			
 			files, _ := ioutil.ReadDir(currentDir)
 			o.(*widget.Label).SetText(files[i].Name())
 		},
 	)
 
 	updateDir := func(newDir string) {
-		os.Chdir(newDir)
+		err := os.Chdir(newDir)
+		if err != nil {
+			return
+		}
 		currentDir, _ = os.Getwd()
 		dirLabel.SetText(fmt.Sprintf("Directory: %s", currentDir))
 		fileList.Refresh()
@@ -38,7 +42,7 @@ func createFileList(currentDir string, dirLabel *widget.Label, mainWindow fyne.W
 		if selectedFile.IsDir() {
 			updateDir(selectedFile.Name())
 		} else {
-			OpenTextEditor(selectedFile.Name(), currentDir, mainWindow)
+			openTextEditor(currentDir, selectedFile.Name(), currentDir, mainWindow, dirLabel)
 		}
 	}
 
@@ -51,11 +55,53 @@ func createFileList(currentDir string, dirLabel *widget.Label, mainWindow fyne.W
 
 func createMainContent(currentDir string, mainWindow fyne.Window) fyne.CanvasObject {
 	dirLabel := widget.NewLabel(fmt.Sprintf("Directory: %s", currentDir))
-	fileList, backButton := createFileList(currentDir, dirLabel, mainWindow)
-
-	return container.NewVBox(
+	fileList, backButton := createFileList(
+		currentDir,
 		dirLabel,
-		container.NewHBox(backButton),
-		fileList,
+		mainWindow)
+
+	mainWindow.SetContent(container.NewVBox(dirLabel,
+		container.NewVBox(fileList, backButton)))
+
+	return nil
+}
+
+func openTextEditor(currentDir, filename, dir string,
+	mainWindow fyne.Window, dirLabel *widget.Label) {
+
+	filePath := dir + string(os.PathSeparator) + filename
+
+	textEditor, err := ioutil.ReadFile(filePath) // textEditor окно где содержимое файла редактируется
+	if err != nil {
+		dialog.ShowError(err, mainWindow)
+		return
+	}
+
+	entry := widget.NewMultiLineEntry()
+	entry.SetText(string(textEditor))
+
+	saveButton := widget.NewButton("Save", func() {
+		err := ioutil.WriteFile(filePath, []byte(entry.Text), 0644)
+		if err != nil {
+			dialog.ShowError(err, mainWindow)
+			return
+		}
+
+		dialog.ShowInformation("Done", "File saved", mainWindow)
+	})
+
+	backButton := widget.NewButton("Back", func() {
+		createMainContent(currentDir, mainWindow)
+		mainWindow.SetContent(Content)
+	})
+
+	mainWindow.SetContent(
+		container.NewBorder(
+			dirLabel,
+			container.NewVBox(backButton, saveButton),
+			nil,
+			nil,
+			entry,
+		),
 	)
 }
